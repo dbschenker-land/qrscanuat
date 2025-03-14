@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Meta tags for character encoding and responsive design -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Title of the webpage -->
+    <title>Singapore Landbridge Event</title>
+    <!-- External script for QR code scanning functionality -->
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <!-- Internal CSS for styling the webpage -->
+    <style>
+        /* General body styling */
+        body { 
+            font-family: 'Segoe UI', Arial, sans-serif; /* Font family */
+            text-align: center; /* Center-align text */
+            background-color: teal; /* Background color */
+            padding: 15px; /* Padding around the content */
+            color: white; /* Text color */
+            line-height: 1.6; /* Line height for better readability */
+            font-size: 16px; /* Base font size */
+        }
+        /* Styling for h2 headings */
+        h2 {
+            font-size: 24px; /* Font size */
+            margin: 20px 0; /* Margin for spacing */
+            font-weight: 600; /* Font weight */
+            letter-spacing: 0.5px; /* Letter spacing */
+        }
+        /* Styling for buttons */
+        button { 
+            margin: 12px auto; /* Margin for spacing */
+            padding: 15px 25px; /* Padding inside the button */
+            font-size: 16px; /* Font size */
+            cursor: pointer; /* Pointer cursor on hover */
+            width: 90%; /* Width of the button */
+            max-width: 320px; /* Maximum width */
+            display: block; /* Display as block element */
+            border: none; /* No border */
+            border-radius: 8px; /* Rounded corners */
+            letter-spacing: 0.5px; /* Letter spacing */
+            transition: opacity 0.3s ease; /* Smooth transition for opacity */
+        }
+        /* Styling for button when active (clicked) */
+        button:active {
+            opacity: 0.8; /* Reduce opacity */
+        }
+        /* Styling for completed buttons */
+        .completed { 
+            background-color: #2a722a; /* Green background */
+            color: white; /* White text */
+            cursor: not-allowed; /* Not-allowed cursor */
+        }
+        /* Styling for disabled buttons */
+        .disabled { 
+            background-color: #666; /* Gray background */
+            color: white; /* White text */
+            cursor: not-allowed; /* Not-allowed cursor */
+        }
+        /* Styling for popup windows */
+        .popup { 
+            display: none; /* Hidden by default */
+            position: fixed; /* Fixed position */
+            top: 50%; /* Center vertically */
+            left: 50%; /* Center horizontally */
+            transform: translate(-50%, -50%); /* Center the popup */
+            background: white; /* White background */
+            color: #333; /* Dark text color */
+            padding: 25px; /* Padding inside the popup */
+            border-radius: 12px; /* Rounded corners */
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2); /* Shadow effect */
+            width: 90%; /* Width of the popup */
+            max-width: 400px; /* Maximum width */
+            font-size: 16px; /* Font size */
+            line-height: 1.5; /* Line height */
+        }
+        /* Styling for h3 headings inside popups */
+        .popup h3 {
+            font-size: 20px; /* Font size */
+            margin-bottom: 15px; /* Margin for spacing */
+            font-weight: 600; /* Font weight */
+            color: #1a1a1a; /* Dark text color */
+        }
+        /* Styling for overlay background */
+        .overlay { 
+            display: none; /* Hidden by default */
+            position: fixed; /* Fixed position */
+            top: 0; /* Top of the screen */
+            left: 0; /* Left of the screen */
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            background: rgba(0,0,0,0.6); /* Semi-transparent black background */
+        }
+        /* Styling for canvas elements */
+        canvas { 
+            border: 1px solid #ccc; /* Border around the canvas */
+            width: 100%; /* Full width */
+            height: 150px; /* Height of the canvas */
+            touch-action: none; /* Disable touch actions */
+            margin: 15px 0; /* Margin for spacing */
+            border-radius: 8px; /* Rounded corners */
+        }
+        /* Styling for QR reader container */
+        #qr-reader { 
+            width: 100%; /* Full width */
+            max-width: 300px; /* Maximum width */
+            margin: 15px auto; /* Center the container */
+        }
+        /* Styling for logo images */
+        .logo { 
+            max-width: 250px; /* Maximum width */
+            width: 80%; /* Width relative to container */
+            margin: 20px 0; /* Margin for spacing */
+        }
+        /* Styling for quiz options */
+        .quiz-option { 
+            margin: 12px 0; /* Margin for spacing */
+            padding: 15px; /* Padding inside the option */
+            border: 1px solid #ddd; /* Border around the option */
+            border-radius: 8px; /* Rounded corners */
+            cursor: pointer; /* Pointer cursor on hover */
+            font-size: 16px; /* Font size */
+            transition: transform 0.2s ease; /* Smooth transition for transform */
+        }
+        /* Styling for quiz options when active (clicked) */
+        .quiz-option:active {
+            transform: scale(0.98); /* Slightly scale down */
+        }
+        /* Styling for correct quiz options */
+        .quiz-option.correct { 
+            background-color: #2a722a; /* Green background */
+            color: white; /* White text */
+            border-color: #2a722a; /* Green border */
+        }
+        /* Styling for incorrect quiz options */
+        .quiz-option.incorrect { 
+            background-color: #c0392b; /* Red background */
+            color: white; /* White text */
+            border-color: #c0392b; /* Red border */
+        }
+        /* Styling for signature pad */
+        #signature-pad { 
+            width: 100%; /* Full width */
+            height: 150px; /* Height of the signature pad */
+            border: 1px solid #ccc; /* Border around the pad */
+            background: white; /* White background */
+            border-radius: 8px; /* Rounded corners */
+        }
+        /* Styling for signature buttons container */
+        .signature-buttons { 
+            display: flex; /* Flexbox layout */
+            justify-content: space-between; /* Space between buttons */
+            margin-top: 15px; /* Margin for spacing */
+            gap: 10px; /* Gap between buttons */
+        }
+        /* Styling for signature buttons */
+        .signature-buttons button { 
+            width: 100%; /* Full width */
+            margin: 0; /* No margin */
+            padding: 12px; /* Padding inside the button */
+            font-size: 16px; /* Font size */
+        }
+        /* Styling for saved signature image */
+        #savedSignature { 
+            width: 80%; /* Width relative to container */
+            height: auto; /* Auto height */
+            margin: 15px auto; /* Center the image */
+            display: block; /* Display as block element */
+            border-radius: 8px; /* Rounded corners */
+        }
+        /* Styling for QR mismatch message */
+        #qrMismatch {
+            color: #c0392b; /* Red text color */
+            margin: 15px 0; /* Margin for spacing */
+            font-weight: 500; /* Font weight */
+            font-size: 16px; /* Font size */
+        }
+        /* Styling for fun facts */
+        .fun-fact {
+            font-size: 15px; /* Font size */
+            line-height: 1.4; /* Line height */
+            margin: 15px 0; /* Margin for spacing */
+            color: #666; /* Gray text color */
+        }
+        /* Styling for paragraphs inside thank you popup */
+        #thankYouPopup p {
+            font-size: 17px; /* Font size */
+            margin: 20px 0; /* Margin for spacing */
+            color: #444; /* Dark text color */
+        }
+        /* Styling for completed signature button */
+       #signatureBtn.completed { 
+          background-color: #2a722a !important; /* Green background */
+          color: white !important; /* White text */
+        }
+    </style>
+</head>
+<body>
+    <!-- Welcome Popup -->
+    <div class="overlay" id="welcomeOverlay" style="display: block;"></div>
+    <div class="popup" id="welcomePopup" style="display: block;">
+        <h3>Welcome to DB Schenker Digital Experience</h3>
+        <p>Scan QR codes at each station to complete activities and unlock the final ePOD signature!</p>
+        <button onclick="closeWelcomePopup()">Get Started</button>
+    </div>
+
+    <!-- Logo and heading -->
+    <img src="db-schenker-logo-main.png" alt="DB Schenker Logo Main" class="logo">
+    <h2>Landbridge Event</h2>
+
+    <!-- Buttons for different activities -->
+    <button id="registrationBtn" onclick="openQRScanner('registration', '123456')" class="completed" disabled>Pick up - Completed</button>
+    <button id="funQuizBtn" onclick="startFunQuiz()">Customs Clearance</button>
+    <button id="vrBtn" onclick="openQRScanner('vr', '123456')">Cross Border</button>
+    <button id="schenkerConnectBtn" onclick="openQRScanner('schenkerConnect', '123456')">Transit</button>
+    <button id="smartLogisticsBtn" onclick="openQRScanner('smartLogistics', '123456')">Delivered</button>
+    <!-- QR Scanner Popup -->
+      <div class="overlay" id="qrOverlay"></div>
+      <div class="popup" id="qrPopup">
+        <h3>Scan QR Code</h3>
+        <div id="qr-reader"></div>
+        <p id="qrMismatch" style="display: none;">QR Code Mismatch!</p>
+        <button onclick="closeQRScanner()">Close Scanner</button>
+      </div>
+
+    <!-- Signature Button -->
+    <button id="signatureBtn" class="disabled" onclick="showThankYou()" disabled>ePOD</button>
+
+    <!-- Signature Popup -->
+    <div class="overlay" id="signatureOverlay"></div>
+    <div class="popup" id="signaturePopup">
+        <h3>Sign Below</h3>
+        <canvas id="signature-pad"></canvas>
+        <div class="signature-buttons">
+            <button onclick="clearSignature()">Clear</button>
+            <button onclick="saveSignature()">Save Signature</button>
+        </div>
+    </div>
+
+    <!-- Thank You Popup -->
+    <div class="overlay" id="thankYouOverlay"></div>
+    <div class="popup" id="thankYouPopup">
+        <h2>Electronic Proof of Delivery</h2>
+        <img src="db-schenker-logo.png" alt="DB Schenker Logo" class="logo">
+        <p style="color: #444;">DB Schenker | landbridge</p>
+        <button onclick="exitThankYou()">Finish Experience</button>
+    </div>
+
+    <!-- Exit Popup -->
+    <div class="overlay" id="exitOverlay"></div>
+    <div class="popup" id="exitPopup">
+        <h3>Thank You!</h3>
+        <p>We hope you enjoyed this digital experience. Thank you for visiting us!</p>
+        <button onclick="closeAllPopups()">Close</button>
+    </div>
+
+    <!-- Quiz Popup -->
+    <div class="overlay" id="quizOverlay"></div>
+    <div class="popup" id="quizPopup">
+        <h3 id="quizQuestion"></h3>
+        <div id="quizOptions"></div>
+        <p id="funFact" style="display: none;" class="fun-fact"></p>
+        <div class="button-group">
+            <button id="nextButton" onclick="showNextQuiz()" style="display: none;">Next Question</button>
+            <button id="quizCloseButton" onclick="closeQuiz()" style="display: none;">Finish Quiz</button>
+        </div>
+    </div>
+
+    <script>
+        // Welcome Popup Functions
+        function closeWelcomePopup() {
+            // Hide the welcome overlay and popup
+            document.getElementById("welcomeOverlay").style.display = "none";
+            document.getElementById("welcomePopup").style.display = "none";
+        }
+
+        // Initialize signature pad
+        let currentAction = ""; // Tracks the current action (e.g., registration, customs)
+        let drawing = false; // Tracks whether the user is drawing on the signature pad
+        let scanner = null; // Holds the QR scanner instance
+        const signatureCanvas = document.getElementById("signature-pad"); // Signature canvas element
+        const signatureCtx = signatureCanvas.getContext("2d"); // 2D context for the canvas
+        signatureCanvas.width = signatureCanvas.offsetWidth; // Set canvas width
+        signatureCanvas.height = 150; // Set canvas height
+        signatureCtx.strokeStyle = "#2a722a"; // Set stroke color
+        signatureCtx.lineWidth = 2; // Set stroke width
+
+        // QR Code Configuration
+        const qrCodes = {
+            registration: "123456", // QR code for registration
+            funQuiz: "123456", // QR code for fun quiz
+            vr: "123456", // QR code for VR
+            schenkerConnect: "123456", // QR code for Schenker Connect
+            smartLogistics: "123456" // QR code for smart logistics
+        };
+
+        // Quiz Configuration
+        const funQuiz = [
+            { 
+                question: "Which of the following is a MUST-HAVE document for customs clearance?", 
+                options: ["Your passport","Commercial invoice","Hotel reservation","Travel guidebook"], 
+                answer: "Commercial invoice", // Correct answer
+                funFact: "While a travel guidebook might help you explore, customs officers are more interested in the value of your goods!" // Fun fact
+            },
+            { 
+                question: "If your shipment is worth over $5,000, will you need to pay customs duties?", 
+                options: ["Yes", "No"], 
+                answer: "Yes", // Correct answer
+                funFact: "Think of customs duties as a ‘toll fee’—the higher the value, the higher the cost!" // Fun fact
+            },
+            { 
+                question: "Which of the following items is most likely to be held by customs?", 
+                options: ["Electronics", "Fresh fruits", "Clothing", "Books"], 
+                answer: "Fresh fruits", // Correct answer
+                funFact: "Fresh fruits might carry pests, and customs officers aren’t fans of uninvited ‘guests’!" // Fun fact
+            }
+        ];
+        let currentQuizIndex = 0; // Tracks the current quiz question index
+
+        // Signature Functions
+        function startDrawing(event) {
+            // Start drawing on the signature pad
+            drawing = true;
+            signatureCtx.beginPath();
+            const rect = signatureCanvas.getBoundingClientRect();
+            const x = (event.clientX || event.touches[0].clientX) - rect.left; // Get X coordinate
+            const y = (event.clientY || event.touches[0].clientY) - rect.top; // Get Y coordinate
+            signatureCtx.moveTo(x, y); // Move to the starting point
+        }
+
+        function draw(event) {
+            // Draw on the signature pad
+            if (!drawing) return;
+            event.preventDefault();
+            const rect = signatureCanvas.getBoundingClientRect();
+            const x = (event.clientX || event.touches[0].clientX) - rect.left; // Get X coordinate
+            const y = (event.clientY || event.touches[0].clientY) - rect.top; // Get Y coordinate
+            signatureCtx.lineTo(x, y); // Draw a line to the new point
+            signatureCtx.stroke(); // Render the line
+        }
+
+        function stopDrawing() {
+            // Stop drawing on the signature pad
+            drawing = false;
+        }
+
+        // Event Listeners for Signature Pad
+        signatureCanvas.addEventListener("mousedown", startDrawing); // Mouse down event
+        signatureCanvas.addEventListener("mousemove", draw); // Mouse move event
+        signatureCanvas.addEventListener("mouseup", stopDrawing); // Mouse up event
+        signatureCanvas.addEventListener("mouseleave", stopDrawing); // Mouse leave event
+        signatureCanvas.addEventListener("touchstart", (e) => {
+            // Touch start event for mobile devices
+            e.preventDefault();
+            startDrawing(e.touches[0]);
+        }, { passive: false });
+        signatureCanvas.addEventListener("touchmove", (e) => {
+            // Touch move event for mobile devices
+            e.preventDefault();
+            draw(e.touches[0]);
+        }, { passive: false });
+        signatureCanvas.addEventListener("touchend", stopDrawing); // Touch end event
+
+        function clearSignature() {
+            // Clear the signature pad
+            signatureCtx.clearRect(0, 0, signatureCanvas.width, signatureCanvas.height);
+        }
+
+        function saveSignature() {
+            // Save the signature as a data URL
+            const dataUrl = signatureCanvas.toDataURL();
+            document.getElementById("savedSignature").src = dataUrl;
+            document.getElementById("thankYouOverlay").style.display = "block";
+            document.getElementById("thankYouPopup").style.display = "block";
+        }
+
+        // Popup Management Functions
+        function exitThankYou() {
+            // Show the exit popup
+            document.getElementById("exitOverlay").style.display = "block";
+            document.getElementById("exitPopup").style.display = "block";
+        }
+
+        function closeAllPopups() {
+            // Close all popups and reset the signature button
+            document.querySelectorAll(".overlay, .popup").forEach(element => {
+                element.style.display = "none";
+            });
+            document.getElementById("signatureBtn").classList.add("disabled");
+            document.getElementById("signatureBtn").disabled = true;
+        }
+
+        // QR Scanner Functions
+        function openQRScanner(action, expectedCode) {
+            // Open the QR scanner for the specified action
+            currentAction = action;
+            document.getElementById("qrOverlay").style.display = "block";
+            document.getElementById("qrPopup").style.display = "block";
+            document.getElementById("qrMismatch").style.display = "none";
+
+            scanner = new Html5Qrcode("qr-reader");
+            scanner.start(
+                { facingMode: "environment" }, // Use the rear camera
+                { fps: 10, qrbox: 250 }, // Scanner configuration
+                qrCodeMessage => {
+                    // Callback when a QR code is scanned
+                    if (qrCodeMessage === expectedCode) {
+                        let button = document.getElementById(action + "Btn");
+                        button.classList.add("completed"); // Mark the button as completed
+                        button.textContent = button.textContent + " - Completed"; // Update button text
+                        button.disabled = true; // Disable the button
+                        checkAllCompleted(); // Check if all activities are completed
+                        closeQRScanner(); // Close the scanner
+                        if (action === "funQuiz") startFunQuiz(); // Start the quiz if applicable
+
+                        // Save completed buttons to local storage
+                        saveCompletedButtons();
+                    } else {
+                        document.getElementById("qrMismatch").style.display = "block"; // Show mismatch message
+                    }
+                },
+                errorMessage => console.log(errorMessage) // Log errors
+            );
+        }
+
+        function closeQRScanner() {
+            // Close the QR scanner
+            if (scanner) {
+                scanner.stop().then(() => {
+                    document.getElementById("qrOverlay").style.display = "none";
+                    document.getElementById("qrPopup").style.display = "none";
+                }).catch(err => console.log(err));
+            }
+        }
+
+        // Quiz Functions
+        function startFunQuiz() {
+            // Start the fun quiz
+            const funQuizButton = document.getElementById("funQuizBtn");
+            funQuizButton.classList.add("completed"); // Add completed class
+            funQuizButton.textContent = "Customs Clearance - Completed"; // Update button text
+            funQuizButton.disabled = true; // Disable the button
+            currentQuizIndex = 0;
+            showNextQuiz();
+        }
+
+        function showNextQuiz() {
+            // Display the next quiz question
+            if (currentQuizIndex < funQuiz.length) {
+                const quiz = funQuiz[currentQuizIndex];
+                const isLastQuestion = currentQuizIndex === funQuiz.length - 1;
+                
+                document.getElementById("quizQuestion").textContent = quiz.question; // Set the question
+                const quizOptions = document.getElementById("quizOptions");
+                quizOptions.innerHTML = ""; // Clear previous options
+                
+                quiz.options.forEach(option => {
+                    const optionDiv = document.createElement("div");
+                    optionDiv.className = "quiz-option";
+                    optionDiv.textContent = option;
+                    optionDiv.onclick = () => checkAnswer(option, quiz.answer, quiz.funFact); // Add click handler
+                    quizOptions.appendChild(optionDiv);
+                });
+
+                document.getElementById("quizCloseButton").style.display = isLastQuestion ? "block" : "none"; // Show close button for last question
+                document.getElementById("quizOverlay").style.display = "block"; // Show quiz overlay
+                document.getElementById("quizPopup").style.display = "block"; // Show quiz popup
+                document.getElementById("nextButton").style.display = "none"; // Hide next button initially
+                document.getElementById("funFact").style.display = "none"; // Hide fun fact initially
+                
+                currentQuizIndex++; // Move to the next question
+            } else {
+                closeQuiz(); // Close the quiz if all questions are done
+            }
+        }
+
+        function checkAnswer(selectedOption, correctAnswer, funFact) {
+            // Check if the selected answer is correct
+            const options = document.querySelectorAll(".quiz-option");
+            options.forEach(option => {
+                if (option.textContent === correctAnswer) {
+                    option.classList.add("correct"); // Mark correct answer
+                } else if (option.textContent === selectedOption) {
+                    option.classList.add("incorrect"); // Mark incorrect answer
+                }
+                option.onclick = null; // Disable further clicks
+            });
+            document.getElementById("funFact").textContent = funFact; // Show fun fact
+            document.getElementById("funFact").style.display = "block"; // Display fun fact
+            document.getElementById("nextButton").style.display = currentQuizIndex < funQuiz.length ? "block" : "none"; // Show next button if more questions
+        }
+
+        function closeQuiz() {
+            // Close the quiz popup
+            document.getElementById("quizOverlay").style.display = "none";
+            document.getElementById("quizPopup").style.display = "none";
+        }
+
+        // Completion Check
+        function checkAllCompleted() {
+            // Check if all activities are completed
+            const buttons = ["registrationBtn","funQuizBtn","vrBtn","schenkerConnectBtn","smartLogisticsBtn"];
+            if (buttons.every(id => document.getElementById(id).classList.contains("completed"))) {
+                const signatureBtn = document.getElementById("signatureBtn");
+                signatureBtn.classList.remove("disabled"); // Enable signature button
+                signatureBtn.disabled = false;
+            }
+        }
+
+        function showThankYou() {
+            // Show the thank you popup
+            const signatureBtn = document.getElementById("signatureBtn");
+            signatureBtn.classList.remove("disabled");
+            signatureBtn.classList.add("completed"); // Mark signature as completed
+            signatureBtn.textContent = "ePOD - Completed"; // Update button text
+            signatureBtn.disabled = true; // Disable the button
+            document.getElementById("thankYouOverlay").style.display = "block";
+            document.getElementById("thankYouPopup").style.display = "block";
+
+            // Save completed buttons to local storage
+            saveCompletedButtons();
+        }
+
+        // Local Storage Logic
+        function saveCompletedButtons() {
+            // Save completed buttons to local storage
+            const completedButtons = [];
+            const buttons = ["registrationBtn", "funQuizBtn", "vrBtn", "schenkerConnectBtn", "smartLogisticsBtn", "signatureBtn"];
+            
+            buttons.forEach(id => {
+                const button = document.getElementById(id);
+                if (button.classList.contains("completed")) {
+                    completedButtons.push(id); // Add completed button to the list
+                }
+            });
+
+            const storageData = {
+                completedButtons: completedButtons, // List of completed buttons
+                timestamp: new Date().getTime() // Current timestamp
+            };
+
+            localStorage.setItem("completedButtons", JSON.stringify(storageData)); // Save to local storage
+        }
+
+        function restoreCompletedButtons() {
+            // Restore completed buttons from local storage
+            const storageData = JSON.parse(localStorage.getItem("completedButtons"));
+            
+            if (storageData && storageData.completedButtons) {
+                const currentTime = new Date().getTime();
+                const storedTime = storageData.timestamp;
+                const expirationTime = 1 * 60 * 1000; // 30 minutes in milliseconds
+
+                if (currentTime - storedTime < expirationTime) {
+                    storageData.completedButtons.forEach(id => {
+                        const button = document.getElementById(id);
+                        if (button) {
+                            button.classList.add("completed"); // Mark button as completed
+                            button.textContent = button.textContent + " - Completed"; // Update button text
+                            button.disabled = true; // Disable the button
+                        }
+                    });
+
+                    checkAllCompleted(); // Check if all activities are completed
+                } else {
+                    localStorage.removeItem("completedButtons"); // Clear expired data
+                }
+            }
+        }
+
+        // Restore completed buttons on page load
+        window.onload = function() {
+            restoreCompletedButtons();
+        };
+    </script>
+</body>
+</html>
