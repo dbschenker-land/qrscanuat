@@ -64,8 +64,8 @@
             top: 50%; /* Center vertically */
             left: 50%; /* Center horizontally */
             transform: translate(-50%, -50%); /* Center the popup */
-            background: white; /* White background */
-            color: #333; /* Dark text color */
+            background: teal; /* Teal background */
+            color: white; /* White text */
             padding: 25px; /* Padding inside the popup */
             border-radius: 12px; /* Rounded corners */
             box-shadow: 0 4px 15px rgba(0,0,0,0.2); /* Shadow effect */
@@ -79,7 +79,7 @@
             font-size: 20px; /* Font size */
             margin-bottom: 15px; /* Margin for spacing */
             font-weight: 600; /* Font weight */
-            color: #1a1a1a; /* Dark text color */
+            color: white; /* White text color */
         }
         /* Styling for overlay background */
         .overlay { 
@@ -180,7 +180,7 @@
             font-size: 15px; /* Font size */
             line-height: 1.4; /* Line height */
             margin: 15px 0; /* Margin for spacing */
-            color: #666; /* Gray text color */
+            color: white; /* Gray text color */
         }
         /* Styling for paragraphs inside thank you popup */
         #thankYouPopup p {
@@ -192,6 +192,66 @@
        #signatureBtn.completed { 
           background-color: #2a722a !important; /* Green background */
           color: white !important; /* White text */
+        }
+
+        /* Camera Popup Styling */
+        #cameraPopup {
+            background-color: teal; /* Teal background */
+            color: white; /* White text */
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        #cameraPreview {
+            width: 100%;
+            max-width: 300px;
+            margin: 15px auto;
+            background-color: #000; /* Black background for the camera preview */
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        #cameraVideo, #cameraPhoto {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        #captureButton {
+            background-color: white; /* Grey button */
+            color: black;
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+
+        #captureButton:hover {
+            background-color: #555; /* Darker grey on hover */
+        }
+
+        #saveInstruction {
+            font-size: 14px;
+            color: white; /* White hint text */
+            margin-top: 10px;
+        }
+
+        #closeCameraButton {
+            background-color: grey; /* Grey close button */
+            color: white;
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+
+        #closeCameraButton:hover {
+            background-color: #666; /* Darker grey on hover */
         }
     </style>
 </head>
@@ -226,13 +286,18 @@
     <!-- Signature Button -->
     <button id="signatureBtn" class="disabled" onclick="showThankYou()" disabled>ePOD</button>
 
-    <!-- Camera Input and Preview -->
+    <!-- Camera Popup -->
     <div class="overlay" id="cameraOverlay"></div>
     <div class="popup" id="cameraPopup">
         <h3>Take a Picture</h3>
-        <input type="file" id="cameraInput" accept="image/*" capture="environment">
-        <button id="cameraButton">Open Camera</button>
-        <img id="preview" src="#" alt="Image preview" style="display:none;">
+        <div id="cameraPreview">
+            <video id="cameraVideo" autoplay></video>
+            <canvas id="cameraCanvas" style="display: none;"></canvas>
+            <img id="cameraPhoto" src="#" alt="Captured Photo" style="display: none;">
+        </div>
+        <button id="captureButton">Capture</button>
+        <p id="saveInstruction" style="display: none;">Long press the photo to save it to your gallery.</p>
+        <button id="closeCameraButton" style="display: none;">Close</button>
     </div>
 
     <!-- Signature Popup -->
@@ -516,47 +581,105 @@
             }
         }
 
+        // Camera Functions
+        let cameraStream = null;
+
         function showThankYou() {
             // Show the camera popup
             document.getElementById("cameraOverlay").style.display = "block";
             document.getElementById("cameraPopup").style.display = "block";
 
-            // Add event listener to the camera button
-            document.getElementById('cameraButton').addEventListener('click', function() {
-                document.getElementById('cameraInput').click();
+            // Start the camera
+            startCamera();
+
+            // Add event listener to the capture button
+            document.getElementById('captureButton').addEventListener('click', capturePhoto);
+
+            // Add event listener to the close button
+            document.getElementById('closeCameraButton').addEventListener('click', closeCameraPopup);
+        }
+
+        function startCamera() {
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(stream => {
+                    cameraStream = stream;
+                    const video = document.getElementById('cameraVideo');
+                    video.srcObject = stream;
+                })
+                .catch(err => {
+                    console.error("Error accessing the camera: ", err);
+                    alert("Unable to access the camera. Please ensure you have granted permission.");
+                });
+        }
+
+        function capturePhoto() {
+            const video = document.getElementById('cameraVideo');
+            const canvas = document.getElementById('cameraCanvas');
+            const photo = document.getElementById('cameraPhoto');
+            const saveInstruction = document.getElementById('saveInstruction');
+            const closeButton = document.getElementById('closeCameraButton');
+
+            // Set canvas dimensions to match video
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+
+            // Draw the current video frame on the canvas
+            const context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // Convert canvas image to data URL and display it
+            const dataUrl = canvas.toDataURL('image/png');
+            photo.src = dataUrl;
+            photo.style.display = 'block';
+            video.style.display = 'none';
+
+            // Show save instruction and close button
+            saveInstruction.style.display = 'block';
+            closeButton.style.display = 'block';
+
+            // Stop the camera stream
+            cameraStream.getTracks().forEach(track => track.stop());
+
+            // Add long-press event to save the photo
+            photo.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                savePhotoToGallery(dataUrl);
             });
+        }
 
-            // Add event listener to the camera input
-            document.getElementById('cameraInput').addEventListener('change', function(event) {
-                const file = event.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        const preview = document.getElementById('preview');
-                        preview.src = e.target.result;
-                        preview.style.display = 'block';
+        function savePhotoToGallery(dataUrl) {
+            const link = document.createElement('a');
+            link.href = dataUrl;
+            link.download = 'captured_photo.png';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            alert('Photo saved to your gallery!');
+        }
 
-                        // Close the camera popup and show the thank you popup
-                        document.getElementById("cameraOverlay").style.display = "none";
-                        document.getElementById("cameraPopup").style.display = "none";
+        function closeCameraPopup() {
+            // Close the camera popup
+            document.getElementById("cameraOverlay").style.display = "none";
+            document.getElementById("cameraPopup").style.display = "none";
 
-                        // Mark the ePOD button as completed
-                        const signatureBtn = document.getElementById("signatureBtn");
-                        signatureBtn.classList.remove("disabled");
-                        signatureBtn.classList.add("completed");
-                        signatureBtn.textContent = "ePOD - Completed";
-                        signatureBtn.disabled = true;
+            // Stop the camera stream if it's still running
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(track => track.stop());
+            }
 
-                        // Show the thank you popup
-                        document.getElementById("thankYouOverlay").style.display = "block";
-                        document.getElementById("thankYouPopup").style.display = "block";
+            // Mark the ePOD button as completed
+            const signatureBtn = document.getElementById("signatureBtn");
+            signatureBtn.classList.remove("disabled");
+            signatureBtn.classList.add("completed");
+            signatureBtn.textContent = "ePOD - Completed";
+            signatureBtn.disabled = true;
 
-                        // Save completed buttons to local storage
-                        saveCompletedButtons();
-                    };
-                    reader.readAsDataURL(file);
-                }
-            });
+            // Show the thank you popup
+            document.getElementById("thankYouOverlay").style.display = "block";
+            document.getElementById("thankYouPopup").style.display = "block";
+
+            // Save completed buttons to local storage
+            saveCompletedButtons();
         }
 
         // Local Storage Logic
