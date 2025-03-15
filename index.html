@@ -226,6 +226,15 @@
     <!-- Signature Button -->
     <button id="signatureBtn" class="disabled" onclick="showThankYou()" disabled>ePOD</button>
 
+    <!-- Camera Input and Preview -->
+    <div class="overlay" id="cameraOverlay"></div>
+    <div class="popup" id="cameraPopup">
+        <h3>Take a Picture</h3>
+        <input type="file" id="cameraInput" accept="image/*" capture="environment">
+        <button id="cameraButton">Open Camera</button>
+        <img id="preview" src="#" alt="Image preview" style="display:none;">
+    </div>
+
     <!-- Signature Popup -->
     <div class="overlay" id="signatureOverlay"></div>
     <div class="popup" id="signaturePopup">
@@ -508,17 +517,46 @@
         }
 
         function showThankYou() {
-            // Show the thank you popup
-            const signatureBtn = document.getElementById("signatureBtn");
-            signatureBtn.classList.remove("disabled");
-            signatureBtn.classList.add("completed"); // Mark signature as completed
-            signatureBtn.textContent = "ePOD - Completed"; // Update button text
-            signatureBtn.disabled = true; // Disable the button
-            document.getElementById("thankYouOverlay").style.display = "block";
-            document.getElementById("thankYouPopup").style.display = "block";
+            // Show the camera popup
+            document.getElementById("cameraOverlay").style.display = "block";
+            document.getElementById("cameraPopup").style.display = "block";
 
-            // Save completed buttons to local storage
-            saveCompletedButtons();
+            // Add event listener to the camera button
+            document.getElementById('cameraButton').addEventListener('click', function() {
+                document.getElementById('cameraInput').click();
+            });
+
+            // Add event listener to the camera input
+            document.getElementById('cameraInput').addEventListener('change', function(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const preview = document.getElementById('preview');
+                        preview.src = e.target.result;
+                        preview.style.display = 'block';
+
+                        // Close the camera popup and show the thank you popup
+                        document.getElementById("cameraOverlay").style.display = "none";
+                        document.getElementById("cameraPopup").style.display = "none";
+
+                        // Mark the ePOD button as completed
+                        const signatureBtn = document.getElementById("signatureBtn");
+                        signatureBtn.classList.remove("disabled");
+                        signatureBtn.classList.add("completed");
+                        signatureBtn.textContent = "ePOD - Completed";
+                        signatureBtn.disabled = true;
+
+                        // Show the thank you popup
+                        document.getElementById("thankYouOverlay").style.display = "block";
+                        document.getElementById("thankYouPopup").style.display = "block";
+
+                        // Save completed buttons to local storage
+                        saveCompletedButtons();
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
         }
 
         // Local Storage Logic
