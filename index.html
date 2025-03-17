@@ -496,14 +496,28 @@
             document.getElementById("quizPopup").style.display = "none";
         }
 
-        // Completion Check
-        function checkAllCompleted() {
+        // Check if all activities are completed in sequence
+        //function checkAllCompleted() {
             // Check if all activities are completed
-            const buttons = ["registrationBtn","funQuizBtn","vrBtn","schenkerConnectBtn","smartLogisticsBtn"];
-            if (buttons.every(id => document.getElementById(id).classList.contains("completed"))) {
-                const signatureBtn = document.getElementById("signatureBtn");
-                signatureBtn.classList.remove("disabled"); // Enable signature button
-                signatureBtn.disabled = false;
+        //    const buttons = ["registrationBtn","funQuizBtn","vrBtn","schenkerConnectBtn","smartLogisticsBtn"];
+        //    if (buttons.every(id => document.getElementById(id).classList.contains("completed"))) {
+        //        const signatureBtn = document.getElementById("signatureBtn");
+        //        signatureBtn.classList.remove("disabled"); // Enable signature button
+        //        signatureBtn.disabled = false;
+        //    }
+
+        // Check if all activities are completed in random
+        function checkAllCompleted() {
+        const buttons = ["registrationBtn", "funQuizBtn", "vrBtn", "schenkerConnectBtn", "smartLogisticsBtn"];
+        const allCompleted = buttons.every(id => {
+        const button = document.getElementById(id);
+        return button.classList.contains("completed"); // Check if each button is completed
+        });
+
+        if (allCompleted) {
+        const signatureBtn = document.getElementById("signatureBtn");
+        signatureBtn.classList.remove("disabled"); // Enable signature button
+        signatureBtn.disabled = false;
             }
         }
 
